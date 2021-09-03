@@ -1,19 +1,10 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using StarterAssets;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     private StarterAssetsInputs _input;
-
-    private void Awake()
-    {
-    }
-
-    // Start is called before the first frame update
+    
     void Start()
     {
         _input = GetComponent<StarterAssetsInputs>();
@@ -35,7 +26,7 @@ public class PlayerController : MonoBehaviour
         {
             if (hit.transform.CompareTag("Interactable"))
             {
-                hit.transform.GetComponent<Interactable>().Interact();
+                hit.transform.SendMessage("Interact");
             }
         }
         print("Interact button pressed");

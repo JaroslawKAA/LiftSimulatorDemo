@@ -6,11 +6,11 @@ public class MovementDetector : MonoBehaviour
     [Header("Settings")] public float detectionDistance = 1;
 
     [HideInInspector] public int floor;
-
-    [Header("Defined dynamicaly.")] public bool someoneStayInDoor;
+    [HideInInspector] public bool someoneStayInDoor;
 
     private void Awake()
     {
+        // Get number of floor from parent floor object name
         floor = Convert.ToInt32(transform.parent.name.Split('_')[1]);
     }
 

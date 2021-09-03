@@ -4,9 +4,19 @@ using UnityEngine.Assertions;
 
 public abstract class Interactable : MonoBehaviour
 {
-    [HideInInspector] public bool isMouseOver;
-
+    [HideInInspector] private bool _isMouseOver;
     private AudioSource _audioSource;
+
+    public virtual void Interact()
+    {
+        if (_audioSource.clip != null)
+            _audioSource.Play();
+    }
+
+    public void IsMouseOver()
+    {
+        _isMouseOver = true;
+    }
 
     private void Awake()
     {
@@ -18,21 +28,15 @@ public abstract class Interactable : MonoBehaviour
 
     private void Update()
     {
-        isMouseOver = false;
+        _isMouseOver = false;
     }
 
     private void LateUpdate()
     {
-        if (isMouseOver)
+        if (_isMouseOver)
             Highlight();
         else
             OffHighlight();
-    }
-
-    public virtual void Interact()
-    {
-        if (_audioSource.clip != null)
-            _audioSource.Play();
     }
 
     protected virtual void Highlight()

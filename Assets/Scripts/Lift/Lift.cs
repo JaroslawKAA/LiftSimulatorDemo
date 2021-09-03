@@ -1,34 +1,36 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.Assertions;
 
 public class Lift : MonoBehaviour
 {
-    public float movingSpeed = .5f;
+    [Header("Settings")] public float movingSpeed = .5f;
     public Transform[] floors;
     public LiftDoor door;
     [HideInInspector] public LiftButton[] liftButtons;
 
     public event Action<int> onLiftArrived;
+    public event Action onLiftStartmoving;
 
-
-    [Header("Defined dynamically")] [SerializeField]
-    private int _floor;
+    # region Private
 
     private FloorDoor[] _floorDoors;
     private LiftSounds _sounds;
     private AudioSource _audioSource;
     [HideInInspector] public MovementDetector[] detectors;
 
-    public int Floor
-    {
-        get => _floor;
-        set => _floor = value;
-    }
+    #endregion
 
+    /// <summary>
+    /// Current index of floor
+    /// </summary>
+    public int Floor { get; set; }
+
+    /// <summary>
+    /// Position of lift destination.
+    /// </summary>
     private Vector3 TargetPosition => new Vector3(
         transform.position.x,
         floors[Floor].position.y,
@@ -36,22 +38,32 @@ public class Lift : MonoBehaviour
 
     private void Awake()
     {
-        liftButtons = transform.parent.GetComponentsInChildren<LiftButton>();
         _floorDoors = transform.parent.GetComponentsInChildren<FloorDoor>();
         _audioSource = GetComponent<AudioSource>();
         _sounds = GetComponent<LiftSounds>();
+
+        liftButtons = transform.parent.GetComponentsInChildren<LiftButton>();
         detectors = transform.parent.GetComponentsInChildren<MovementDetector>();
+
         foreach (LiftButton button in liftButtons)
         {
             button.onButtonPressed += OnCalledLift;
         }
+
+        onLiftArrived += PlaySound_OnLiftArrived;
+        onLiftStartmoving += PlaySound_OnLiftStartMoving;
+
+        Assert.AreNotEqual(0, floors.Length,
+            "Add floors Game Object to the list \"Floors\"");
+        Assert.IsNotNull(door);
     }
 
 
     private void OnCalledLift(LiftButton button)
     {
+        // Close door before moving to the target floor
         FloorDoor currentFloorDoor = _floorDoors
-            .First(d => d.floor == Floor);
+            .First(d => d.Floor == Floor);
         if (currentFloorDoor.Opened)
         {
             currentFloorDoor.Close();
@@ -71,12 +83,8 @@ public class Lift : MonoBehaviour
 
     private IEnumerator MoveToSelectedFloor()
     {
-        if (_sounds.moving != null)
-        {
-            _audioSource.clip = _sounds.moving;
-            _audioSource.Play();
-        }
-
+        onLiftStartmoving?.Invoke();
+        
         while (transform.position.y != TargetPosition.y)
         {
             Vector3 newPosition = Vector3.MoveTowards(transform.position,
@@ -85,15 +93,27 @@ public class Lift : MonoBehaviour
 
             yield return null;
         }
+        
+        onLiftArrived?.Invoke(Floor);
+        print($"Lift arrived to {Floor} floor.");
+    }
 
+    private void PlaySound_OnLiftArrived(int floor)
+    {
         _audioSource.Stop();
         if (_sounds.bell != null)
         {
             _audioSource.clip = _sounds.bell;
             _audioSource.Play();
         }
+    }
 
-        onLiftArrived?.Invoke(Floor);
-        print($"Lift arrived to {_floor} floor.");
+    private void PlaySound_OnLiftStartMoving()
+    {
+        if (_sounds.moving != null)
+        {
+            _audioSource.clip = _sounds.moving;
+            _audioSource.Play();
+        }
     }
 }

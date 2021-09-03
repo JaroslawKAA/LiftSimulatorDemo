@@ -3,6 +3,10 @@ using UnityEngine.Assertions;
 
 public class LiftButtonTrigger : Interactable
 {
+    /// <summary>
+    /// Object witch is displayed on mouse over button.
+    /// </summary>
+    [Header("Settings")]
     public GameObject highLightObject;
 
     private LiftButton _liftButton;
@@ -10,6 +14,7 @@ public class LiftButtonTrigger : Interactable
     protected override void OnAwake()
     {
         _liftButton = transform.parent.GetComponent<LiftButton>();
+        
         Assert.IsNotNull(highLightObject);
     }
 

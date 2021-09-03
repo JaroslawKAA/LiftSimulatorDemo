@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Linq;
 using UnityEngine;
@@ -7,77 +6,31 @@ using UnityEngine.Assertions;
 public class LiftDoor : MonoBehaviour
 {
     [Header("Settings - LiftDoor")] public float movingDistance = .45f;
-    public float openingSpeed = .5f;
     public Lift lift;
 
-    [Header("Updated dynamically")] [SerializeField]
+    public delegate void Callback();
+
+    /// <summary>
+    /// Check if someone is in door scope.
+    /// </summary>
     protected MovementDetector _detector;
-    
-    [SerializeField] private bool _opened;
+
+    protected float openingTimer;
+
     private Animator _animator;
-    
+    [SerializeField] private bool _opened;
+    private static readonly int OpenedAnimatorProperty = Animator.StringToHash("Opened");
+    private static readonly int IsSomethingInDoorScope = Animator.StringToHash("IsSomethingInDoorScope");
+
     public bool Opened
     {
         get => _opened;
         set
         {
             _opened = value;
-            if (value == false)
-                openingTimer = 0f;
-        }
-    }
-
-    private DoorWing[] _wings = new DoorWing[2];
-    protected float openingTimer;
-    private static readonly int OpenedAnimatorProperty = Animator.StringToHash("Opened");
-
-    private void Awake()
-    {
-        int index = 0;
-        foreach (Transform child in transform)
-        {
-            _wings[index] = child.gameObject.GetComponent<DoorWing>();
-            index++;
-        }
-        _animator = GetComponent<Animator>();
-
-        Assert.IsNotNull(lift);
-        lift.onLiftArrived += OnLiftArrived;
-        OnAwake();
-    }
-    
-    
-    private void Update()
-    {
-        if (_detector != null && _detector.someoneStayInDoor)
-        {
             openingTimer = 0f;
-            return;
-        }
-        else
-        {
-            if (Opened)
-            {
-                openingTimer += Time.deltaTime;
-            }
-
-            if (openingTimer > 5f)
-            {
-                Opened = false;
-                StartCoroutine(CloseDoor());
-            }
         }
     }
-
-    protected virtual void OnLiftArrived(int floor)
-    {
-        Open();
-        // Get movement detector from current floor
-        _detector = lift.detectors.First(d => d.floor == lift.Floor);
-    }
-
-
-    public delegate void Callback();
 
     public void Open(Callback callback = null)
     {
@@ -89,6 +42,42 @@ public class LiftDoor : MonoBehaviour
         StartCoroutine(CloseDoor(callback));
     }
 
+    private void Awake()
+    {
+        _animator = GetComponent<Animator>();
+
+        Assert.IsNotNull(lift);
+        lift.onLiftArrived += OnLiftArrived;
+        OnAwake();
+    }
+
+
+    private void Update()
+    {
+        // Close door after 3 second and if player is not in door scope.
+        if (_detector != null && _detector.someoneStayInDoor)
+        {
+            openingTimer = 0f;
+            return;
+        }
+
+        if (Opened)
+            openingTimer += Time.deltaTime;
+
+        if (openingTimer > 3f)
+        {
+            Opened = false;
+            StartCoroutine(CloseDoor());
+        }
+    }
+
+    protected virtual void OnLiftArrived(int floor)
+    {
+        Open();
+        // Get movement detector from current floor
+        _detector = lift.detectors.First(d => d.floor == lift.Floor);
+    }
+
     private IEnumerator OpenDoor(Callback callback = null)
     {
         OnDoorChangeState();
@@ -98,25 +87,39 @@ public class LiftDoor : MonoBehaviour
             yield return null;
         }
 
-        callback?.Invoke();
         Opened = true;
+        callback?.Invoke();
     }
 
     protected IEnumerator CloseDoor(Callback callback = null)
     {
         OnDoorChangeState();
         _animator.SetBool(OpenedAnimatorProperty, false);
+        _animator.SetBool(IsSomethingInDoorScope, false);
+
         while (!_animator.GetCurrentAnimatorStateInfo(0).IsName("ClosePose"))
         {
+            // If someone is in door scope cancel closing.
+            if (_detector.someoneStayInDoor)
+            {
+                _animator.SetBool(IsSomethingInDoorScope, true);
+                Opened = true;
+                _animator.SetBool(OpenedAnimatorProperty, true);
+                yield break;
+            }
+
             yield return null;
         }
 
-        callback?.Invoke();
         Opened = false;
-        
+        callback?.Invoke();
     }
 
-    protected virtual void OnAwake() {}
-    
-    protected virtual void OnDoorChangeState(){}
+    protected virtual void OnAwake()
+    {
+    }
+
+    protected virtual void OnDoorChangeState()
+    {
+    }
 }

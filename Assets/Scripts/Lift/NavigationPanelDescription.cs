@@ -7,7 +7,7 @@ using UnityEngine;
 public class NavigationPanelDescription : MonoBehaviour
 {
     private TextMeshPro[] _floorNumbers;
-    private int currentFloor;
+    private int _currentFloor;
     private Lift _lift;
 
     private void Awake()
@@ -27,8 +27,7 @@ public class NavigationPanelDescription : MonoBehaviour
     void Update()
     {
         ResetHighlight();
-        currentFloor = GetCurrentFloor();
-        _floorNumbers[currentFloor].color = Color.green;
+        HighlightFloorNumber();
     }
 
     private void ResetHighlight()
@@ -55,5 +54,11 @@ public class NavigationPanelDescription : MonoBehaviour
         }
 
         return Convert.ToInt32(closestFloor.name.Split('_')[1]);
+    }
+
+    private void HighlightFloorNumber()
+    {
+        _currentFloor = GetCurrentFloor();
+        _floorNumbers[_currentFloor].color = Color.green;
     }
 }
