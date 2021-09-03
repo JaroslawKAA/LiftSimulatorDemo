@@ -9,7 +9,7 @@ public class LiftButton : MonoBehaviour
     public Lift lift;
     public Color pressedColor;
     public Color idleColor;
-    public bool pressed;
+    [HideInInspector] public bool pressed;
     /// <summary>
     /// If true get floor index from parent name.
     /// </summary>

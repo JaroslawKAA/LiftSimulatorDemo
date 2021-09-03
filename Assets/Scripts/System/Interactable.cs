@@ -21,9 +21,9 @@ public abstract class Interactable : MonoBehaviour
     private void Awake()
     {
         gameObject.tag = "Interactable";
-        OnAwake();
         _audioSource = GetComponent<AudioSource>();
         Assert.IsNotNull(_audioSource);
+        OnAwake();
     }
 
     private void Update()

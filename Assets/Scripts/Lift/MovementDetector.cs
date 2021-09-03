@@ -19,8 +19,11 @@ public class MovementDetector : MonoBehaviour
     {
         if (Physics.Raycast(transform.position, Vector3.forward, out RaycastHit hit, detectionDistance))
         {
-            someoneStayInDoor = true;
             Debug.DrawRay(transform.position, Vector3.forward * detectionDistance, Color.red);
+            if (!hit.transform.CompareTag("Lift"))
+            {
+                someoneStayInDoor = true;
+            }
         }
         else
         {
