@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -17,12 +18,17 @@ public class LiftButton : MonoBehaviour
 
     public void CallLift()
     {
-        if (pressed)
+        if (pressed || OtherLiftButtonIsPressed())
             return;
 
         pressed = true;
         _renderer.material.SetColor("_Color", pressedColor);
         onButtonPressed?.Invoke(this);
+    }
+
+    private bool OtherLiftButtonIsPressed()
+    {
+        return lift.liftButtons.Any(b => b.pressed);
     }
 
     private void ResetButton()

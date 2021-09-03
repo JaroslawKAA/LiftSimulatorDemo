@@ -10,18 +10,19 @@ public class Lift : MonoBehaviour
     public float movingSpeed = .5f;
     public Transform[] floors;
     public LiftDoor door;
-    
+    [HideInInspector] public LiftButton[] liftButtons;
+
     public event Action<int> onLiftArrived;
-    
-    [Header("Defined dynamically")]
-    [SerializeField]
+
+
+    [Header("Defined dynamically")] [SerializeField]
     private int _floor;
 
-    private LiftButton[] _liftButtons;
     private FloorDoor[] _floorDoors;
-    [HideInInspector]
-    public MovementDetector[] detectors;
-    
+    private LiftSounds _sounds;
+    private AudioSource _audioSource;
+    [HideInInspector] public MovementDetector[] detectors;
+
     public int Floor
     {
         get => _floor;
@@ -35,15 +36,17 @@ public class Lift : MonoBehaviour
 
     private void Awake()
     {
-        _liftButtons = transform.parent.GetComponentsInChildren<LiftButton>();
+        liftButtons = transform.parent.GetComponentsInChildren<LiftButton>();
         _floorDoors = transform.parent.GetComponentsInChildren<FloorDoor>();
+        _audioSource = GetComponent<AudioSource>();
+        _sounds = GetComponent<LiftSounds>();
         detectors = transform.parent.GetComponentsInChildren<MovementDetector>();
-        foreach (LiftButton button in _liftButtons)
+        foreach (LiftButton button in liftButtons)
         {
             button.onButtonPressed += OnCalledLift;
         }
     }
-    
+
 
     private void OnCalledLift(LiftButton button)
     {
@@ -52,16 +55,12 @@ public class Lift : MonoBehaviour
         if (currentFloorDoor.Opened)
         {
             currentFloorDoor.Close();
-            door.Close(() =>
-            {
-                CallLift(button.floor);
-            });
+            door.Close(() => { CallLift(button.floor); });
         }
         else
         {
             CallLift(button.floor);
         }
-
     }
 
     private void CallLift(int floor)
@@ -69,17 +68,31 @@ public class Lift : MonoBehaviour
         Floor = floor;
         StartCoroutine(MoveToSelectedFloor());
     }
-    
+
     private IEnumerator MoveToSelectedFloor()
     {
+        if (_sounds.moving != null)
+        {
+            _audioSource.clip = _sounds.moving;
+            _audioSource.Play();
+        }
+
         while (transform.position.y != TargetPosition.y)
         {
-            Vector3 newPosition = Vector3.MoveTowards(transform.position, 
+            Vector3 newPosition = Vector3.MoveTowards(transform.position,
                 TargetPosition, movingSpeed * Time.deltaTime);
             transform.position = newPosition;
-            
+
             yield return null;
         }
+
+        _audioSource.Stop();
+        if (_sounds.bell != null)
+        {
+            _audioSource.clip = _sounds.bell;
+            _audioSource.Play();
+        }
+
         onLiftArrived?.Invoke(Floor);
         print($"Lift arrived to {_floor} floor.");
     }

@@ -31,7 +31,7 @@ public class PlayerController : MonoBehaviour
     private void Interact()
     {
         Transform camera = Camera.main.transform;
-        if (Physics.Raycast(camera.position, camera.forward, out RaycastHit hit, 4))
+        if (Physics.Raycast(camera.position, camera.forward, out RaycastHit hit, 1))
         {
             if (hit.transform.CompareTag("Interactable"))
             {

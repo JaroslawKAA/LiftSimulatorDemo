@@ -91,6 +91,7 @@ public class LiftDoor : MonoBehaviour
 
     private IEnumerator OpenDoor(Callback callback = null)
     {
+        OnDoorChangeState();
         _animator.SetBool(OpenedAnimatorProperty, true);
         while (!_animator.GetCurrentAnimatorStateInfo(0).IsName("OpenPose"))
         {
@@ -99,12 +100,11 @@ public class LiftDoor : MonoBehaviour
 
         callback?.Invoke();
         Opened = true;
-
-        yield return null;
     }
 
     protected IEnumerator CloseDoor(Callback callback = null)
     {
+        OnDoorChangeState();
         _animator.SetBool(OpenedAnimatorProperty, false);
         while (!_animator.GetCurrentAnimatorStateInfo(0).IsName("ClosePose"))
         {
@@ -113,56 +113,10 @@ public class LiftDoor : MonoBehaviour
 
         callback?.Invoke();
         Opened = false;
+        
     }
+
+    protected virtual void OnAwake() {}
     
-    // private IEnumerator OpenDoor(Callback callback = null)
-    // {
-    //     while (_wings[0].transform.localPosition.z != -movingDistance)
-    //     {
-    //         foreach (var wing in _wings)
-    //         {
-    //             float zPosition = wing.direction == LiftDoorDirections.Right ? movingDistance : -movingDistance;
-    //             var targetPos = new Vector3(wing.transform.localPosition.x,
-    //                 wing.transform.localPosition.y,
-    //                 zPosition);
-    //             var newPos = Vector3.MoveTowards(wing.transform.localPosition,
-    //                 targetPos,
-    //                 openingSpeed * Time.deltaTime);
-    //             wing.transform.localPosition = newPos;
-    //         }
-    //
-    //         yield return null;
-    //     }
-    //
-    //     callback?.Invoke();
-    //     Opened = true;
-    //
-    //     yield return null;
-    // }
-    //
-    // protected IEnumerator CloseDoor(Callback callback = null)
-    // {
-    //     while (_wings[0].transform.localPosition.z != 0)
-    //     {
-    //         foreach (var wing in _wings)
-    //         {
-    //             var targetPos = new Vector3(wing.transform.localPosition.x,
-    //                 wing.transform.localPosition.y,
-    //                 0);
-    //             var newPos = Vector3.MoveTowards(wing.transform.localPosition,
-    //                 targetPos,
-    //                 openingSpeed * Time.deltaTime);
-    //             wing.transform.localPosition = newPos;
-    //         }
-    //
-    //         yield return null;
-    //     }
-    //
-    //     callback?.Invoke();
-    //     Opened = false;
-    // }
-    
-    protected virtual void OnAwake()
-    {
-    }
+    protected virtual void OnDoorChangeState(){}
 }
