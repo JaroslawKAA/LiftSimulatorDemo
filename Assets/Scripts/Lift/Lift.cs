@@ -4,11 +4,13 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
+[RequireComponent(typeof(BoxCollider))]
+[RequireComponent(typeof(LiftSounds))]
 public class Lift : MonoBehaviour
 {
     [Header("Settings")] public float movingSpeed = .5f;
     public Transform[] floors;
-    public LiftDoor door;
+    private LiftDoor _door;
     [HideInInspector] public LiftButton[] liftButtons;
 
     public event Action<int> onLiftArrived;
@@ -41,6 +43,7 @@ public class Lift : MonoBehaviour
         _floorDoors = transform.parent.GetComponentsInChildren<FloorDoor>();
         _audioSource = GetComponent<AudioSource>();
         _sounds = GetComponent<LiftSounds>();
+        _door = GetComponentInChildren<LiftDoor>();
 
         liftButtons = transform.parent.GetComponentsInChildren<LiftButton>();
         detectors = transform.parent.GetComponentsInChildren<MovementDetector>();
@@ -55,7 +58,6 @@ public class Lift : MonoBehaviour
 
         Assert.AreNotEqual(0, floors.Length,
             "Add floors Game Object to the list \"Floors\"");
-        Assert.IsNotNull(door);
     }
 
 
@@ -67,7 +69,7 @@ public class Lift : MonoBehaviour
         if (currentFloorDoor.Opened)
         {
             currentFloorDoor.Close();
-            door.Close(() => { CallLift(button.floor); });
+            _door.Close(() => { CallLift(button.floor); });
         }
         else
         {
